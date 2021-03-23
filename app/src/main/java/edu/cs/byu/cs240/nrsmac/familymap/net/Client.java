@@ -18,7 +18,7 @@ public class Client {
         login(serverHost, serverPort, request);
     }
 
-    private LoginResponse login(String serverHost, String serverPort, LoginRequest request) {
+    public LoginResponse login(String serverHost, String serverPort, LoginRequest request) {
         try {
             URL url = new URL("http://" + serverHost + ":" + serverPort + "/user/login");
 
