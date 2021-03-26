@@ -2,13 +2,10 @@ package edu.cs.byu.cs240.nrsmac.familymap.model;
 
 import android.graphics.Color;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.TreeSet;
 
 public class DataCache {
@@ -75,7 +72,7 @@ public class DataCache {
             //Populate personEvents
             ArrayList<Event> thisPersonEvents = new ArrayList<>();
             for(Event e:events){
-                if(p.getPersonID() == e.getPersonID()){
+                if(p.getPersonID().equals(e.getPersonID())){
                     thisPersonEvents.add(e);
                 }
             }
@@ -84,8 +81,12 @@ public class DataCache {
             //Populate childrenByPerson
             ArrayList<Person> thisPersonChildren = new ArrayList<>();
             for(Person child : persons){
-                if(child.getFatherID().equals(p.getPersonID()) || child.getMotherID().equals(p.getPersonID())){
-                    thisPersonChildren.add(child);
+                if(child.getFatherID() != null && child.getMotherID() != null ){
+                    if(child.getFatherID().equals(p.getPersonID()) ||
+                            child.getMotherID().equals(p.getPersonID()))
+                    {
+                        thisPersonChildren.add(child);
+                    }
                 }
             }
             this.childrenByPerson.put(p.getPersonID(), thisPersonChildren);
@@ -97,9 +98,8 @@ public class DataCache {
             this.events.put(e.getEventID(),e);
 
             //Update event types
-            if(!this.eventTypes.contains(e.getEventType())){
-                this.eventTypes.add(e.getEventType());
-            }
+            this.eventTypes.add(e.getEventType());
+
         }
 
         //TODO populate event colors

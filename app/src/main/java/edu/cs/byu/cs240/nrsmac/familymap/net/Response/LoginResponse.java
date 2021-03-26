@@ -40,10 +40,6 @@ public class LoginResponse {
         return personID;
     }
 
-    public boolean isSuccessful() {
-        return success;
-    }
-
     public String getMessage() {
         return message;
     }

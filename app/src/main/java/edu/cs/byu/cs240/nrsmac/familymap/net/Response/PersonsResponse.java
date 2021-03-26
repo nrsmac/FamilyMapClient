@@ -8,6 +8,9 @@ import edu.cs.byu.cs240.nrsmac.familymap.model.Person;
 public class PersonsResponse {
     private String message;
     private ArrayList<Person> data;
+
+
+
     private boolean success;
     private String associatedUsername;
     private String personID;
@@ -90,6 +93,38 @@ public class PersonsResponse {
 
     public String getSpouseID() {
         return spouseID;
+    }
+
+    public void setAssociatedUsername(String associatedUsername) {
+        this.associatedUsername = associatedUsername;
+    }
+
+    public void setPersonID(String personID) {
+        this.personID = personID;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public void setFatherID(String fatherID) {
+        this.fatherID = fatherID;
+    }
+
+    public void setMotherID(String motherID) {
+        this.motherID = motherID;
+    }
+
+    public void setSpouseID(String spouseID) {
+        this.spouseID = spouseID;
     }
 
     public Person getPerson(String personID){

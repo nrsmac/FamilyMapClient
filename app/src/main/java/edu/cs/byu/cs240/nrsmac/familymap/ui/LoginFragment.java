@@ -3,8 +3,10 @@ package edu.cs.byu.cs240.nrsmac.familymap.ui;
 import android.app.Fragment;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,12 +14,28 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Toast;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import edu.cs.byu.cs240.nrsmac.familymap.R;
-import edu.cs.byu.cs240.nrsmac.familymap.net.Client;
+import edu.cs.byu.cs240.nrsmac.familymap.model.Person;
+import edu.cs.byu.cs240.nrsmac.familymap.net.Request.RegisterRequest;
+import edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.LoginTask;
+import edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.PersonTask;
 import edu.cs.byu.cs240.nrsmac.familymap.net.Request.LoginRequest;
-import edu.cs.byu.cs240.nrsmac.familymap.net.Response.LoginResponse;
+import edu.cs.byu.cs240.nrsmac.familymap.net.Request.PersonsRequest;
+import edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.RegisterTask;
+import edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.TaskConstants;
+
+import static edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.TaskConstants.AUTH_TOKEN_KEY;
+import static edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.TaskConstants.FIRST_NAME_KEY;
+import static edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.TaskConstants.LAST_NAME_KEY;
+import static edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.TaskConstants.MESSAGE_KEY;
+import static edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.TaskConstants.REGISTERING;
+import static edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.TaskConstants.SUCCESS;
+import static edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.TaskConstants.USERNAME_KEY;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -28,11 +46,6 @@ public class LoginFragment extends Fragment {
 
     private static final String TAG = "LoginFragment";
 
-    private static final String LOGGING_IN = "li";
-    private static final String REGISTERING = "r";
-
-    private static final String AUTH_TOKEN_KEY = "AuthTokenKey";
-    private static final String MESSAGE_KEY = "MessageKey";
 
 
 
@@ -61,6 +74,10 @@ public class LoginFragment extends Fragment {
     private RadioGroup genderRadioGroup;
     private RadioButton maleButton;
     private RadioButton femaleButton;
+
+    private String token;
+    private Person userPerson;
+    private String userId;
 
     public LoginFragment() {
         // Required empty public constructor
@@ -117,66 +134,182 @@ public class LoginFragment extends Fragment {
         maleButton = view.findViewById(R.id.maleButton);
         femaleButton = view.findViewById(R.id.femaleButton);
 
+        loginButton.setEnabled(false);
+        registerButton.setEnabled(false);
+
+
+        TextWatcher loginWatcher = new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (serverNameText.getText().length() > 0 &&
+                        portText.getText().length() > 0 &&
+                        usernameText.length()>0 &&
+                        passwordText.getText().length()>0){
+                    loginButton.setEnabled(true);
+                }   else {
+                    loginButton.setEnabled(false);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+
+        };
+
+        serverNameText.addTextChangedListener(loginWatcher);
+        portText.addTextChangedListener(loginWatcher);
+        usernameText.addTextChangedListener(loginWatcher);
+        passwordText.addTextChangedListener(loginWatcher);
+
+        TextWatcher registerWatcher = new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (serverNameText.getText().length() > 0 &&
+                        portText.getText().length() > 0 &&
+                        usernameText.length()>0 &&
+                        passwordText.getText().length()>0 &&
+                        firstNameText.getText().length()>0 &&
+                        lastNameText.getText().length()>0 &&
+                        emailText.getText().length()>0 ){
+                    registerButton.setEnabled(true);
+                }   else {
+                    registerButton.setEnabled(false);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+
+        };
+
+        serverNameText.addTextChangedListener(registerWatcher);
+        portText.addTextChangedListener(registerWatcher);
+        usernameText.addTextChangedListener(registerWatcher);
+        passwordText.addTextChangedListener(registerWatcher);
+        firstNameText.addTextChangedListener(registerWatcher);
+        lastNameText.addTextChangedListener(registerWatcher);
+        emailText.addTextChangedListener(registerWatcher);
+
+
+
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                status = LOGGING_IN;
+                status = TaskConstants.LOGGING_IN;
 
                 String hostName = String.valueOf(serverNameText.getText());
                 String port = String.valueOf(portText.getText());
                 String username = String.valueOf(usernameText.getText());
                 String password = String.valueOf(passwordText.getText());
 
-                Handler uiThreadMessageHandler = new Handler() {
+                Handler syncHandler = new Handler(Looper.getMainLooper()) {
                     @Override
                     public void handleMessage(Message message) {
                         Bundle bundle = message.getData();
-
-                        String token = bundle.getString(AUTH_TOKEN_KEY);
+                        boolean syncSuccess = bundle.getBoolean(SUCCESS);
                         String responseMessage = bundle.getString(MESSAGE_KEY);
 
-                         Log.d(TAG,responseMessage + token + "");
+                        userId = bundle.getString(USERNAME_KEY);
+                        String firstName = bundle.getString(FIRST_NAME_KEY);
+                        String lastName = bundle.getString(LAST_NAME_KEY);
+
+                        if(syncSuccess) {
+                            Toast.makeText(getActivity(), "Retrieving data successful: " + firstName + " " + lastName, Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getActivity(), "Couldn't retrieve data :" + responseMessage, Toast.LENGTH_LONG).show();
+
+                        }
                     }
                 };
+
+                Handler loginMessageHandler = new Handler(Looper.getMainLooper()) {
+                    @Override
+                    public void handleMessage(Message message) {
+                        Bundle bundle = message.getData();
+                        token = bundle.getString(AUTH_TOKEN_KEY);
+                        boolean loginSuccess = bundle.getBoolean(SUCCESS);
+                        String responseMessage = bundle.getString(MESSAGE_KEY);
+                        
+                        if(loginSuccess) {
+                            PersonsRequest personsRequest = new PersonsRequest(token);
+                            PersonTask personTask = new PersonTask(syncHandler,hostName,port,personsRequest);
+                            ExecutorService executor = Executors.newSingleThreadExecutor();
+                            executor.submit(personTask);
+
+                            Toast.makeText(getActivity(), "Login successful", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getActivity(), "Login failed: " + responseMessage, Toast.LENGTH_LONG).show();
+
+                        }
+                    }
+                };
+
+
                 LoginRequest request = new LoginRequest(username,password);
-                GetDataTask task = new GetDataTask(uiThreadMessageHandler, hostName, port, request);
+                LoginTask task = new LoginTask(loginMessageHandler, hostName, port, request);
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(task);
             }
+        });
+
+        registerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                status = REGISTERING;
+
+                String hostName = String.valueOf(serverNameText.getText());
+                String port = String.valueOf(portText.getText());
+                String username = String.valueOf(usernameText.getText());
+                String password = String.valueOf(passwordText.getText());
+                String firstName = String.valueOf(firstNameText.getText());
+                String lastName = String.valueOf(lastNameText.getText());
+                String email = String.valueOf(emailText.getText());
+                String gender = "";
+
+                if(maleButton.isChecked()){
+                    gender = "m";
+                } else if(femaleButton.isChecked()){
+                    gender = "f";
+                }
+
+                Handler registerMessageHandler = new Handler(Looper.getMainLooper()){
+                    @Override
+                    public void handleMessage(Message message){
+                        Bundle bundle = message.getData();
+                        boolean registerSuccess = bundle.getBoolean(SUCCESS);
+                        String responseMessage = bundle.getString(MESSAGE_KEY);
+
+                        if(registerSuccess){
+                            Toast.makeText(getActivity(), "Register successful", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                };
+
+                RegisterRequest request = new RegisterRequest(username,password,email,firstName,lastName,gender);
+                RegisterTask task = new RegisterTask(registerMessageHandler, hostName, port, request);
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(task);
+            }
+
         });
 
         return view;
     }
 
-    private static class GetDataTask implements Runnable {
-
-        private final Handler messageHandler;
-        private final String hostName;
-        private final String port;
-        private final LoginRequest request;
-
-        private GetDataTask(Handler messageHandler, String hostName, String port, LoginRequest request) {
-            this.messageHandler = messageHandler;
-            this.hostName = hostName;
-            this.port = port;
-            this.request = request;
-        }
-
-        @Override
-        public void run() {
-            Client client = new Client();
-
-            LoginResponse response = client.login(hostName,port,request);
-
-            sendMessage(response);
-        }
-
-        private void sendMessage(LoginResponse response) {
-            Message message = Message.obtain();
-
-            Bundle messageBundle = new Bundle();
-            messageBundle.putString(AUTH_TOKEN_KEY, response.getAuthtoken());
-            messageBundle.putString(MESSAGE_KEY, response.getMessage());
-            message.setData(messageBundle);
-            messageHandler.sendMessage(message);
-        }
-    }
 }

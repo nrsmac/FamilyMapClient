@@ -47,7 +47,7 @@ public class EventResponse {
         this.success = success;
     }
 
-    public EventResponse(String message, boolean success){
+    public EventResponse(boolean success,String message){
         this.message = message;
         this.success = success;
     }
