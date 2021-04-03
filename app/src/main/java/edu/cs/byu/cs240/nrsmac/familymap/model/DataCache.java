@@ -44,6 +44,12 @@ public class DataCache {
      */
     private TreeSet<String> paternalAncestors;
 
+    public void setSyncSuccess(boolean syncSuccess) {
+        this.syncSuccess = syncSuccess;
+    }
+
+    private boolean syncSuccess;
+
     /**
      * @return the singleton instance of the DataCache
      */
@@ -55,6 +61,7 @@ public class DataCache {
     }
 
     private DataCache() {
+        this.syncSuccess = false;
         this.persons = new HashMap<>();
         this.events = new HashMap<>();
         this.personEvents = new HashMap<>();
@@ -103,5 +110,41 @@ public class DataCache {
         }
 
         //TODO populate event colors
+    }
+
+    public HashMap<String, Person> getPersons() {
+        return persons;
+    }
+
+    public HashMap<String, Event> getEvents() {
+        return events;
+    }
+
+    public HashMap<String, List<Event>> getPersonEvents() {
+        return personEvents;
+    }
+
+    public HashSet<String> getEventTypes() {
+        return eventTypes;
+    }
+
+    public HashMap<String, Color> getEventColors() {
+        return eventColors;
+    }
+
+    public HashMap<String, List<Person>> getChildrenByPerson() {
+        return childrenByPerson;
+    }
+
+    public TreeSet<String> getMaternalAncestors() {
+        return maternalAncestors;
+    }
+
+    public TreeSet<String> getPaternalAncestors() {
+        return paternalAncestors;
+    }
+
+    public boolean isSyncSuccess() {
+        return syncSuccess;
     }
 }

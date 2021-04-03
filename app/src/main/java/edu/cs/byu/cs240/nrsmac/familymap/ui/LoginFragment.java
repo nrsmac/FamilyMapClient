@@ -1,6 +1,5 @@
 package edu.cs.byu.cs240.nrsmac.familymap.ui;
 
-import android.app.Fragment;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -16,24 +15,29 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
+import androidx.fragment.app.Fragment;
+
+import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import edu.cs.byu.cs240.nrsmac.familymap.R;
+import edu.cs.byu.cs240.nrsmac.familymap.model.DataCache;
+import edu.cs.byu.cs240.nrsmac.familymap.model.Event;
 import edu.cs.byu.cs240.nrsmac.familymap.model.Person;
+import edu.cs.byu.cs240.nrsmac.familymap.net.Request.LoginRequest;
+import edu.cs.byu.cs240.nrsmac.familymap.net.Request.PersonsRequest;
 import edu.cs.byu.cs240.nrsmac.familymap.net.Request.RegisterRequest;
 import edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.LoginTask;
 import edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.PersonTask;
-import edu.cs.byu.cs240.nrsmac.familymap.net.Request.LoginRequest;
-import edu.cs.byu.cs240.nrsmac.familymap.net.Request.PersonsRequest;
 import edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.RegisterTask;
-import edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.TaskConstants;
 
 import static edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.TaskConstants.AUTH_TOKEN_KEY;
 import static edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.TaskConstants.FIRST_NAME_KEY;
 import static edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.TaskConstants.LAST_NAME_KEY;
 import static edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.TaskConstants.MESSAGE_KEY;
-import static edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.TaskConstants.REGISTERING;
+import static edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.TaskConstants.PERSON_ID_KEY;
 import static edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.TaskConstants.SUCCESS;
 import static edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.TaskConstants.USERNAME_KEY;
 
@@ -45,11 +49,6 @@ import static edu.cs.byu.cs240.nrsmac.familymap.net.Tasks.TaskConstants.USERNAME
 public class LoginFragment extends Fragment {
 
     private static final String TAG = "LoginFragment";
-
-
-
-
-    private static String status;
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -78,6 +77,9 @@ public class LoginFragment extends Fragment {
     private String token;
     private Person userPerson;
     private String userId;
+
+    private MapFragment mapFragment;
+    private String mUserPersonId;
 
     public LoginFragment() {
         // Required empty public constructor
@@ -211,7 +213,6 @@ public class LoginFragment extends Fragment {
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                status = TaskConstants.LOGGING_IN;
 
                 String hostName = String.valueOf(serverNameText.getText());
                 String port = String.valueOf(portText.getText());
@@ -228,9 +229,31 @@ public class LoginFragment extends Fragment {
                         userId = bundle.getString(USERNAME_KEY);
                         String firstName = bundle.getString(FIRST_NAME_KEY);
                         String lastName = bundle.getString(LAST_NAME_KEY);
+                        String personId = bundle.getString(PERSON_ID_KEY);
 
                         if(syncSuccess) {
                             Toast.makeText(getActivity(), "Retrieving data successful: " + firstName + " " + lastName, Toast.LENGTH_LONG).show();
+                            mapFragment = new MapFragment();
+
+                            DataCache dataCache = DataCache.instance();
+                            dataCache = DataCache.instance();
+                            dataCache.setSyncSuccess(true);
+                            HashMap<String, Person> persons = dataCache.getPersons();
+                            HashMap<String, List<Event>> events = dataCache.getPersonEvents();
+                            //TODO fix data cache
+                            Person person = persons.get(personId);
+                            Event birth = null;
+                            for (Event e : events.get(personId)) {
+                                if (e.getEventType().equals("birth")){
+                                    birth = e;
+                                }
+                            }
+
+                            getFragmentManager().beginTransaction().replace(R.id.frameLayout, mapFragment).commit();
+                            mapFragment.updateInfo(person, birth);
+
+//                            Intent intent = new Intent(getActivity(),MainActivity.class);
+//                            startActivity(intent);
                         } else {
                             Toast.makeText(getActivity(), "Couldn't retrieve data :" + responseMessage, Toast.LENGTH_LONG).show();
 
@@ -245,8 +268,10 @@ public class LoginFragment extends Fragment {
                         token = bundle.getString(AUTH_TOKEN_KEY);
                         boolean loginSuccess = bundle.getBoolean(SUCCESS);
                         String responseMessage = bundle.getString(MESSAGE_KEY);
+                        String userPersonId = bundle.getString(PERSON_ID_KEY);
                         
                         if(loginSuccess) {
+                            mUserPersonId = userPersonId;
                             PersonsRequest personsRequest = new PersonsRequest(token);
                             PersonTask personTask = new PersonTask(syncHandler,hostName,port,personsRequest);
                             ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -271,8 +296,6 @@ public class LoginFragment extends Fragment {
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                status = REGISTERING;
-
                 String hostName = String.valueOf(serverNameText.getText());
                 String port = String.valueOf(portText.getText());
                 String username = String.valueOf(usernameText.getText());
@@ -297,6 +320,9 @@ public class LoginFragment extends Fragment {
 
                         if(registerSuccess){
                             Toast.makeText(getActivity(), "Register successful", Toast.LENGTH_SHORT).show();
+                        } else if (!registerSuccess){
+                            Toast.makeText(getActivity(), "Register failed: " + responseMessage, Toast.LENGTH_SHORT).show();
+
                         }
                     }
                 };
@@ -306,7 +332,6 @@ public class LoginFragment extends Fragment {
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(task);
             }
-
         });
 
         return view;

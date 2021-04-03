@@ -45,24 +45,23 @@ public class PersonTask implements Runnable{
         Message message = Message.obtain();
         Bundle messageBundle = new Bundle();
 
-//        messageBundle.putString(TaskConstants.USERNAME_KEY, responseForPerson.getAssociatedUsername());
-//        messageBundle.putString(TaskConstants.PERSON_ID_KEY, responseForPerson.getPersonID());
-//        messageBundle.putString(TaskConstants.FIRST_NAME_KEY, responseForPerson.getFirstName());
-//        messageBundle.putString(TaskConstants.LAST_NAME_KEY, responseForPerson.getLastName());
-//        messageBundle.putString(TaskConstants.GENDER_KEY, responseForPerson.getGender());
-//        messageBundle.putString(TaskConstants.FATHER_ID_KEY, responseForPerson.getFatherID());
-//        messageBundle.putString(TaskConstants.MOTHER_ID_KEY, responseForPerson.getMotherID());
-//        messageBundle.putString(TaskConstants.SPOUSE_ID_KEY, responseForPerson.getSpouseID());
+
 
         if (!response.isSuccess()){
             messageBundle.putString(TaskConstants.MESSAGE_KEY, response.getMessage());
         } else {
             messageBundle.putString(TaskConstants.MESSAGE_KEY, "");
+            messageBundle.putString(TaskConstants.USERNAME_KEY, response.getAssociatedUsername());
+            messageBundle.putString(TaskConstants.PERSON_ID_KEY, response.getPersonID());
+            messageBundle.putString(TaskConstants.FIRST_NAME_KEY, response.getFirstName());
+            messageBundle.putString(TaskConstants.LAST_NAME_KEY, response.getLastName());
+            messageBundle.putString(TaskConstants.GENDER_KEY, response.getGender());
+            messageBundle.putString(TaskConstants.FATHER_ID_KEY, response.getFatherID());
+            messageBundle.putString(TaskConstants.MOTHER_ID_KEY, response.getMotherID());
+            messageBundle.putString(TaskConstants.SPOUSE_ID_KEY, response.getSpouseID());
         }
 
         messageBundle.putBoolean(TaskConstants.SUCCESS, response.isSuccess());
-        messageBundle.putString(TaskConstants.FIRST_NAME_KEY, response.getFirstName());
-        messageBundle.putString(TaskConstants.LAST_NAME_KEY, response.getLastName());
         message.setData(messageBundle);
         messageHandler.sendMessage(message);
 
