@@ -87,8 +87,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         super.onCreateView(inflater,container,savedInstanceState);
         View view =  inflater.inflate(R.layout.fragment_map, container, false);
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.mapView);
-
+        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
         mNameText = view.findViewById(R.id.infoPanelName);
@@ -96,7 +95,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         mEventTypeText = view.findViewById(R.id.infoPanelEventType);
         mEventYearText = view.findViewById(R.id.infoPanelEventYear);
 
-        updateView();
         return view;
     }
 
@@ -115,12 +113,20 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         double latitude = mCurrentEvent.getLatitude();
         double longitude = mCurrentEvent.getLongitude();
 
+        // Add a marker in Sydney and move the camera
+        LatLng eventPlace = new LatLng(latitude, longitude);
+        MarkerOptions currentMarker = new MarkerOptions().position(eventPlace).title(mPerson.getFirstName() + " " + mPerson.getLastName() + ":" + mCurrentEvent.getEventType());
+        mMap.addMarker(currentMarker);
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(eventPlace));
+
 
     }
 
     public void updateInfo(Person person, Event event){
         mPerson = person;
         mCurrentEvent = event;
+
+
     }
 
     /**
@@ -135,10 +141,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
-        // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(0, 0);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        updateView();
     }
+
+
 }
