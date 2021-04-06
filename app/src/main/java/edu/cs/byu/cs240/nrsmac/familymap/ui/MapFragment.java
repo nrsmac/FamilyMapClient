@@ -1,5 +1,6 @@
 package edu.cs.byu.cs240.nrsmac.familymap.ui;
 
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,6 +22,12 @@ import edu.cs.byu.cs240.nrsmac.familymap.R;
 import edu.cs.byu.cs240.nrsmac.familymap.model.DataCache;
 import edu.cs.byu.cs240.nrsmac.familymap.model.Event;
 import edu.cs.byu.cs240.nrsmac.familymap.model.Person;
+
+import com.joanzapata.iconify.IconDrawable;
+import com.joanzapata.iconify.Iconify;
+import com.joanzapata.iconify.fonts.FontAwesomeIcons;
+import com.joanzapata.iconify.fonts.FontAwesomeModule;
+
 
 /**
  * A simple {@link Fragment} subclass.
@@ -86,6 +93,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         // Inflate the layout for this fragment
         super.onCreateView(inflater,container,savedInstanceState);
         View view =  inflater.inflate(R.layout.fragment_map, container, false);
+        Iconify.with(new FontAwesomeModule());
 
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -94,6 +102,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         mEventPlaceText = view.findViewById(R.id.infoPanelEventPlace);
         mEventTypeText = view.findViewById(R.id.infoPanelEventType);
         mEventYearText = view.findViewById(R.id.infoPanelEventYear);
+
+        mGenderImage = view.findViewById(R.id.genderImage);
 
         return view;
     }
@@ -104,10 +114,18 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         mEventTypeText.setText(mCurrentEvent.getEventType().toUpperCase());
         mEventYearText.setText(String.valueOf(mCurrentEvent.getYear()));
 
+        Drawable maleIcon = new IconDrawable(getActivity(), FontAwesomeIcons.fa_male).
+                colorRes(R.color.male_icon).sizeDp(40);
+        Drawable femaleIcon = new IconDrawable(getActivity(), FontAwesomeIcons.fa_female).
+                colorRes(R.color.female_icon).sizeDp(40);
+
         if(mPerson.getGender().equals("m")){
             //TODO update image with male icon
+            mGenderImage.setImageDrawable(maleIcon);
         } else if(mPerson.getGender().equals("f")){
             //TODO update image with female icon
+            mGenderImage.setImageDrawable(femaleIcon);
+
         }
 
         double latitude = mCurrentEvent.getLatitude();

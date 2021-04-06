@@ -7,6 +7,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import edu.cs.byu.cs240.nrsmac.familymap.R;
 
 
+import com.joanzapata.iconify.Iconify;
+import com.joanzapata.iconify.fonts.FontAwesomeModule;
+
+
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
@@ -21,6 +26,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         loginFragment = new LoginFragment();
         mapFragment = new MapFragment();
+
+        Iconify.with(new FontAwesomeModule());
 
         if (savedInstanceState == null) {
 //            if(!DataCache.instance().isSyncSuccess()){
